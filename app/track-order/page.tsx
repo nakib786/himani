@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { LogoAmazon } from '@/components/brand/Motifs';
 import { PageHero } from '@/components/ui/PageHero';
 import { TrackForm } from './TrackForm';
 import { COMMERCE, SITE } from '@/lib/site';
@@ -76,9 +77,11 @@ export default function TrackOrderPage() {
                 href={SITE.amazonStorefront}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="link-rule caption mt-4 inline-block uppercase text-fg"
+                aria-label="Go to Amazon.in"
+                className="link-rule caption mt-4 !inline-flex items-center gap-2.5 uppercase text-fg"
               >
-                Go to Amazon.in
+                Go to
+                <LogoAmazon className="h-[1.15rem] w-auto shrink-0 translate-y-[18%]" />
               </a>
             </div>
           </aside>

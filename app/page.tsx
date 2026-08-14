@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
-import { IconArrowRight, RuleDot } from '@/components/brand/Motifs';
+import { IconArrowRight, IconInstagram, RuleDot } from '@/components/brand/Motifs';
 import { TrustStrip } from '@/components/home/TrustStrip';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { Reveal } from '@/components/ui/Reveal';
@@ -338,6 +338,7 @@ export default async function HomePage() {
             rel="noreferrer noopener"
             className="btn btn-secondary mt-9"
           >
+            <IconInstagram className="h-[1.15rem] w-[1.15rem] shrink-0" />
             Follow {SITE.instagramHandle}
           </a>
         </div>

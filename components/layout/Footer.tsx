@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { LogoLockup } from '@/components/brand/Logo';
-import { MarkShield, RuleDot } from '@/components/brand/Motifs';
+import { IconInstagram, LogoAmazon, MarkShield, RuleDot } from '@/components/brand/Motifs';
+import { WatermarkStars } from '@/components/brand/WatermarkStars';
 import { NewsletterForm } from './NewsletterForm';
 import { COMMERCE, FOOTER_NAV, PENDING_CLIENT_DATA, SITE } from '@/lib/site';
 
@@ -48,17 +49,23 @@ export function Footer() {
                 href={SITE.instagram}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="link-rule caption uppercase tracking-[0.18em] text-fg"
+                className="link-rule caption !inline-flex w-fit items-center gap-2.5 uppercase tracking-[0.18em] text-fg"
               >
+                <IconInstagram className="h-[1.15rem] w-[1.15rem] shrink-0" />
                 Instagram {SITE.instagramHandle}
               </a>
+              {/* The wordmark finishes the sentence rather than prefixing it —
+                  "Also on [amazon]" — so the logo is the destination itself and
+                  not a bullet in front of a label repeating it. */}
               <a
                 href={SITE.amazonStorefront}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="link-rule caption uppercase tracking-[0.18em] text-fg"
+                aria-label="Also on Amazon.in"
+                className="link-rule caption !inline-flex w-fit items-center gap-2.5 uppercase tracking-[0.18em] text-fg"
               >
-                Also on Amazon.in
+                Also on
+                <LogoAmazon className="h-[1.15rem] w-auto shrink-0 translate-y-[18%]" />
               </a>
             </div>
           </div>
@@ -129,10 +136,27 @@ export function Footer() {
            own overflow, so it reads as a watermark the page is printed on
            rather than another line of navigation. Decorative: the accessible
            name is already carried by the lockup above. */}
-      <div className="shell pt-10 pb-2 [container-type:inline-size]" aria-hidden="true">
-        <span className="text-watermark block w-full text-center text-[15.8cqw] leading-[0.8] font-normal tracking-[0.06em] -me-[0.06em] uppercase [font-family:var(--font-display)] select-none">
-          Kshyovrata
-        </span>
+      <div className="shell pb-2 [container-type:inline-size]" aria-hidden="true">
+        {/* The letterforms are stretched 25% on the vertical axis rather than
+            set 25% larger: the type size is tuned so the word measures exactly
+            one shell wide, and growing the font would push the K and the A
+            past the clip. Origin is the baseline, so the extra height grows
+            upward and the space above has to absorb it.
+
+            That space is in cqw, not rem, because the word itself is: at 15.8cqw
+            it is ~190px tall on a desktop shell but only ~53px on a 375px
+            phone, so a flat top padding that breathes on desktop opens a gap
+            taller than the word on mobile. The inner div carries it because a
+            container cannot size its own padding from its own cq units. */}
+        {/* The stars are painted after the word, so they cross in front of it
+            rather than behind — at 40% the watermark is too faint to occlude
+            anything convincingly. */}
+        <div className="relative pt-[5.5cqw]">
+          <span className="text-watermark block w-full origin-bottom scale-y-125 text-center text-[15.8cqw] leading-[0.8] font-normal tracking-[0.06em] -me-[0.06em] uppercase [font-family:var(--font-display)] select-none">
+            Kshyovrata
+          </span>
+          <WatermarkStars />
+        </div>
       </div>
 
       {/* ---- Base ---- */}

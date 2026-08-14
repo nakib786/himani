@@ -171,9 +171,12 @@
     border-color: var(--rule);
   }
 
-  /* The oversized footer wordmark — a tint of the muted foreground. */
+  /* The oversized footer wordmark — a tint of the muted foreground. At 22%
+     the letterforms dissolved into the grain on the espresso ground; 40% is
+     still well under the body copy, so it stays a watermark rather than
+     reading as a heading. */
   .text-watermark {
-    color: color-mix(in srgb, var(--fg-mute) 22%, transparent);
+    color: color-mix(in srgb, var(--fg-mute) 40%, transparent);
   }
 }
 
@@ -1074,6 +1077,103 @@ main[data-ground] > *,
 
   .marquee {
     overflow-x: auto;
+  }
+}
+
+/* ==========================================================================
+   FOOTER STAR DRIFT
+   Sparkles crossing the oversized footer wordmark. Three axes, three elements
+   — see components/brand/WatermarkStars.tsx for the choreography.
+
+   Distances are in `cqw`, resolved against the wordmark's own container, so a
+   crossing is exactly one wordmark wide at every viewport. The 6cqw overshoot
+   at each end puts entry and exit off-stage: the footer clips overflow-x, so
+   a star fades off the edge instead of popping out of existence mid-air.
+   ========================================================================== */
+
+.star-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: #fff;
+}
+
+/* Axis 1 — the crossing. `translate` rather than `transform` so the bob and
+   the twinkle further down the tree keep their own transform to themselves. */
+.star {
+  position: absolute;
+  top: var(--lane);
+  left: 0;
+  animation: star-cross var(--cross) linear var(--delay) infinite;
+}
+
+.star[data-dir='l'] {
+  animation-name: star-cross-back;
+}
+
+@keyframes star-cross {
+  from {
+    translate: -6cqw 0;
+  }
+  to {
+    translate: 106cqw 0;
+  }
+}
+
+@keyframes star-cross-back {
+  from {
+    translate: 106cqw 0;
+  }
+  to {
+    translate: -6cqw 0;
+  }
+}
+
+/* Axis 2 — the zig-zag. `linear` + `alternate` is what makes it a zig-zag: an
+   eased curve would round the turns into a wave, which is not what was asked
+   for. The half-period is the bob duration, so a full V takes twice that. */
+.star-bob {
+  display: block;
+  animation: star-bob var(--bob-dur) linear var(--delay) infinite alternate;
+}
+
+@keyframes star-bob {
+  from {
+    transform: translateY(calc(var(--bob) * -1));
+  }
+  to {
+    transform: translateY(var(--bob));
+  }
+}
+
+/* Axis 3 — the twinkle. The glow is scaled off the star's own size so small
+   stars stay pinpricks rather than smudges. */
+.star-glyph {
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  filter: drop-shadow(0 0 calc(var(--size) * 0.55) rgb(255 255 255 / 0.5));
+  animation: star-twinkle var(--twinkle) ease-in-out var(--delay) infinite alternate;
+}
+
+@keyframes star-twinkle {
+  from {
+    opacity: 0.25;
+    transform: scale(0.55) rotate(-18deg);
+  }
+  to {
+    opacity: 0.9;
+    transform: scale(1) rotate(18deg);
+  }
+}
+
+/* The blanket reduced-motion rule below freezes animations at frame one, which
+   would strand every star at its start edge in a static clump. Removed
+   outright instead — the field is pure decoration and the footer reads fine
+   without it. */
+@media (prefers-reduced-motion: reduce) {
+  .star-field {
+    display: none;
   }
 }
 

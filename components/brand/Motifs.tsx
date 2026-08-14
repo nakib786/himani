@@ -11,6 +11,8 @@
  * set, not the mark itself — the mark lives in `Logo.tsx` as traced artwork.
  */
 
+import { AMAZON_VIEWBOX, AMAZON_WORDMARK } from './amazonWordmark';
+
 type MotifProps = {
   className?: string;
   strokeWidth?: number;
@@ -301,6 +303,72 @@ export function IconArrowRight({ className }: MotifProps) {
   return (
     <svg {...iconBase} className={className}>
       <path d="M3.6 12h16.8M14.4 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Third-party marks                                                           */
+/*                                                                             */
+/* The two places we exist off this site. These are the real marks, not our    */
+/* own line vocabulary applied to someone else's brand — a link that says      */
+/* "we are on Amazon" is only worth a logo if the logo is the one people       */
+/* already recognise. So they break the hairline rule above on purpose:        */
+/* Instagram sits at its own glyph weight, and Amazon is the full wordmark.    */
+/*                                                                             */
+/* What they do NOT bring is colour. Both take `currentColor`. Instagram's     */
+/* gradient tile and Amazon's orange would be the only foreign brand colour    */
+/* anywhere on the page, and on the espresso footer they would read as ad      */
+/* units sitting in our own furniture. In ink they belong to the page.         */
+/*                                                                             */
+/* Both are decorative — every link that carries one keeps a text label or an  */
+/* `aria-label`, so the accessible name never depends on the artwork.          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Instagram — the camera glyph: rounded tile, lens, flash dot.
+ *
+ * Drawn at Instagram's own proportions and weight rather than our hairline,
+ * so it carries the same optical mass as the Amazon wordmark beside it.
+ */
+export function IconInstagram({ className }: MotifProps) {
+  return (
+    <svg {...iconBase} strokeWidth={1.9} className={className}>
+      <rect x="2.95" y="2.95" width="18.1" height="18.1" rx="5.15" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="17.35" cy="6.65" r="1.15" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/**
+ * Amazon — the wordmark and its a→z smile, in ink.
+ *
+ * Geometry and the reasoning behind the two edits live in `amazonWordmark.ts`.
+ *
+ * Two things to know when placing it:
+ *
+ *   - It is a ~3.1:1 lockup, so pair a height class with `w-auto`. Never the
+ *     square `h-4 w-4` the marks above take.
+ *   - Its box is not its optical centre. The smile hangs below the letters, so
+ *     the lettering sits ~18% of the height above the middle of the viewBox —
+ *     dropped into a `flex items-center` row it rides visibly high against the
+ *     text beside it. Add `translate-y-[18%]` in those rows. Set inline in a
+ *     sentence instead, use `align-[-0.41em]` with an `em` height.
+ */
+export function LogoAmazon({ className }: MotifProps) {
+  return (
+    <svg
+      viewBox={AMAZON_VIEWBOX}
+      fill="currentColor"
+      fillRule="evenodd"
+      clipRule="evenodd"
+      aria-hidden="true"
+      className={className}
+    >
+      {AMAZON_WORDMARK.map((d) => (
+        <path key={d.slice(0, 24)} d={d} />
+      ))}
     </svg>
   );
 }

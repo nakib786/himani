@@ -3,7 +3,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { LogoLockup } from '@/components/brand/Logo';
-import { MoonStars, RuleDot, Sunburst } from '@/components/brand/Motifs';
+import {
+  IconInstagram,
+  LogoAmazon,
+  MoonStars,
+  RuleDot,
+  Sunburst,
+} from '@/components/brand/Motifs';
 import { PageHero } from '@/components/ui/PageHero';
 import { Reveal } from '@/components/ui/Reveal';
 import { SITE } from '@/lib/site';
@@ -165,15 +171,19 @@ export default function AboutPage() {
               rel="noreferrer noopener"
               className="btn btn-secondary"
             >
+              <IconInstagram className="h-[1.15rem] w-[1.15rem] shrink-0" />
               Instagram
             </a>
+            {/* The wordmark stands in for the label outright — a button reading
+                "[amazon] Amazon.in" says the same thing twice. */}
             <a
               href={SITE.amazonStorefront}
               target="_blank"
               rel="noreferrer noopener"
+              aria-label="Amazon.in"
               className="btn btn-ghost"
             >
-              Amazon.in
+              <LogoAmazon className="h-[1.15rem] w-auto shrink-0 translate-y-[18%]" />
             </a>
             <Link href="/shop" className="btn btn-primary">
               Shop the range

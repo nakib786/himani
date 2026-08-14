@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { LogoAmazon } from '@/components/brand/Motifs';
 import { PageHero } from '@/components/ui/PageHero';
 import { ContactForm } from './ContactForm';
 import { COMMERCE, PENDING_CLIENT_DATA, SITE } from '@/lib/site';
@@ -132,9 +133,18 @@ export default function ContactPage() {
                     href={SITE.amazonStorefront}
                     target="_blank"
                     rel="noreferrer noopener"
+                    aria-label="I ordered on Amazon, not here"
                     className="link-nav body-sm text-fg-soft"
                   >
-                    I ordered on Amazon, not here
+                    {/* Set inline mid-sentence rather than as a leading badge:
+                        this is the one outbound link in a column of internal
+                        ones, and anything in front of it would break the left
+                        edge the other questions share. Height is in `em` and
+                        the baseline is nudged so the wordmark's lowercase
+                        matches the x-height of the sentence around it. */}
+                    I ordered on{' '}
+                    <LogoAmazon className="inline-block h-[0.97em] w-auto align-[-0.41em]" />,
+                    not here
                   </a>
                 </li>
               </ul>

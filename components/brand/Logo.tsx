@@ -19,8 +19,9 @@ import {
  * never used as a site headline.
  *
  * NOTE ON SMALL SIZES: the moon, stars and sun are hairline ornaments that
- * turn to noise much below 48px, so the header (`ornament={false}`) and the
- * favicon (app/icon.svg) carry the emblem alone.
+ * turn to noise much below 48px, so the favicon (app/icon.svg) carries the
+ * emblem alone. Everywhere the mark is drawn on the page — header and footer
+ * alike — it is the complete artwork.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -111,6 +112,12 @@ export function LogoLockup({
 /**
  * Horizontal lockup — the header. Emblem left, wordmark right.
  *
+ * The emblem is the same complete mark the footer lockup carries — crescent,
+ * stars and rising sun included — so the header is not a reduced sibling of
+ * the real logo. That costs height: the ornaments only hold together from
+ * roughly 40px up, which is why the mark runs taller here than the wordmark
+ * beside it would suggest.
+ *
  * Sized down at phone widths: the header row is a symmetric three-column grid,
  * so the lockup has to clear both the menu button and the search + bag cluster
  * on a 375px viewport. `.wordmark-compact` pulls the tracking in over the same
@@ -120,7 +127,7 @@ export function LogoLockup({
 export function LogoHorizontal({ className }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 sm:gap-3 ${className ?? ''}`}>
-      <Monogram className="h-8 w-auto shrink-0 sm:h-10" ornament={false} />
+      <Monogram className="h-10 w-auto shrink-0 sm:h-12" />
       <Wordmark className="wordmark-compact whitespace-nowrap text-[0.6rem] sm:text-[0.95rem]" />
     </span>
   );
