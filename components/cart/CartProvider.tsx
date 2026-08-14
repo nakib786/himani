@@ -40,8 +40,11 @@ type State = {
   hydrated: boolean;
 };
 
+type StoredCart = Pick<State, 'lines' | 'giftMessage'>;
+
 type Action =
-  | { type: 'hydrate'; state: Pick<State, 'lines' | 'giftMessage'> }
+  | { type: 'hydrate'; state: StoredCart }
+  | { type: 'sync'; state: StoredCart }
   | { type: 'add'; item: CartSnapshot; quantity: number }
   | { type: 'remove'; slug: string }
   | { type: 'setQuantity'; slug: string; quantity: number }
@@ -51,11 +54,96 @@ type Action =
 
 const MAX_PER_LINE = 10;
 const STORAGE_KEY = 'ksh_cart_v1';
+const MAX_GIFT_MESSAGE = 240;
+
+const EMPTY_CART: StoredCart = { lines: [], giftMessage: '' };
+
+/**
+ * Coerce one stored entry back into a CartLine, or reject it.
+ *
+ * Everything in localStorage is untrusted input: it may predate a schema
+ * change, have been hand-edited, or have been half-written when a tab died.
+ * A failing line is dropped rather than patched up — losing one line is much
+ * better than a NaN reaching the subtotal, or an empty `image` reaching
+ * next/image, which throws and would take the whole bag down with it.
+ */
+function parseLine(raw: unknown): CartLine | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const line = raw as Record<string, unknown>;
+
+  const text = (v: unknown) => (typeof v === 'string' && v.length > 0 ? v : null);
+  const money = (v: unknown) =>
+    typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null;
+
+  const slug = text(line.slug);
+  const title = text(line.title);
+  const image = text(line.image);
+  const price = money(line.price);
+  const mrp = money(line.mrp);
+  const quantity = money(line.quantity);
+
+  if (!slug || !title || !image) return null;
+  if (price === null || mrp === null) return null;
+  if (quantity === null || quantity < 1) return null;
+
+  return {
+    slug,
+    title,
+    price,
+    mrp,
+    image,
+    // Cosmetic only — an empty alt is valid HTML, so these need no rejection.
+    imageAlt: typeof line.imageAlt === 'string' ? line.imageAlt : '',
+    netQuantity: typeof line.netQuantity === 'string' ? line.netQuantity : '',
+    quantity: Math.min(MAX_PER_LINE, Math.floor(quantity)),
+    giftWrap: line.giftWrap === true,
+  };
+}
+
+/** Parse a raw localStorage payload into a cart. Never throws. */
+function parseCart(raw: string | null): StoredCart {
+  if (!raw) return EMPTY_CART;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return EMPTY_CART;
+    const source = parsed as Record<string, unknown>;
+
+    const lines: CartLine[] = [];
+    const seen = new Set<string>();
+    if (Array.isArray(source.lines)) {
+      for (const entry of source.lines) {
+        const line = parseLine(entry);
+        // Every reducer case keys off slug, so a duplicate would make quantity
+        // edits ambiguous and unremovable. First occurrence wins.
+        if (line && !seen.has(line.slug)) {
+          seen.add(line.slug);
+          lines.push(line);
+        }
+      }
+    }
+
+    return {
+      lines,
+      giftMessage:
+        typeof source.giftMessage === 'string'
+          ? source.giftMessage.slice(0, MAX_GIFT_MESSAGE)
+          : '',
+    };
+  } catch {
+    // Corrupt or unavailable store must never break the page.
+    return EMPTY_CART;
+  }
+}
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'hydrate':
       return { ...state, ...action.state, hydrated: true };
+
+    /* Another tab changed the cart. Adopt its state wholesale — last write
+       wins, which matches what the shopper sees in the tab they just used. */
+    case 'sync':
+      return { ...state, ...action.state };
 
     case 'add': {
       const existing = state.lines.find((l) => l.slug === action.item.slug);
@@ -108,7 +196,7 @@ function reducer(state: State, action: Action): State {
       };
 
     case 'setGiftMessage':
-      return { ...state, giftMessage: action.message.slice(0, 240) };
+      return { ...state, giftMessage: action.message.slice(0, MAX_GIFT_MESSAGE) };
 
     case 'clear':
       return { ...state, lines: [], giftMessage: '' };
@@ -147,27 +235,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [lastAction, setLastAction] = useState('');
   const persistReady = useRef(false);
+  /** Raw JSON we last read or wrote, used to suppress redundant writes. */
+  const lastPersisted = useRef<string | null>(null);
 
   /* Restore from localStorage once, on mount. */
   useEffect(() => {
+    let raw: string | null = null;
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<State>;
-        dispatch({
-          type: 'hydrate',
-          state: {
-            lines: Array.isArray(parsed.lines) ? parsed.lines : [],
-            giftMessage: typeof parsed.giftMessage === 'string' ? parsed.giftMessage : '',
-          },
-        });
-      } else {
-        dispatch({ type: 'hydrate', state: { lines: [], giftMessage: '' } });
-      }
+      raw = window.localStorage.getItem(STORAGE_KEY);
     } catch {
-      // A corrupt or unavailable store must never break the page.
-      dispatch({ type: 'hydrate', state: { lines: [], giftMessage: '' } });
+      /* Private mode / storage disabled — fall through to an empty bag. */
     }
+    lastPersisted.current = raw;
+    dispatch({ type: 'hydrate', state: parseCart(raw) });
     persistReady.current = true;
   }, []);
 
@@ -175,15 +255,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
      real cart before we have read it back. */
   useEffect(() => {
     if (!persistReady.current || !state.hydrated) return;
+    const serialised = JSON.stringify({
+      lines: state.lines,
+      giftMessage: state.giftMessage,
+    });
+    // Skip no-op writes. Beyond saving a write, this is what stops two tabs
+    // echoing each other forever: a synced tab would otherwise re-persist the
+    // value it just received, waking the tab that sent it, and so on.
+    if (serialised === lastPersisted.current) return;
+    lastPersisted.current = serialised;
     try {
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ lines: state.lines, giftMessage: state.giftMessage }),
-      );
+      window.localStorage.setItem(STORAGE_KEY, serialised);
     } catch {
       /* Private mode / quota — the cart still works for this session. */
     }
   }, [state.lines, state.giftMessage, state.hydrated]);
+
+  /* Adopt changes made in other tabs. `storage` fires only in tabs other than
+     the one that wrote, so this cannot see our own writes. Without it, a tab
+     holding stale state overwrites another tab's additions on its next edit. */
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY || e.storageArea !== window.localStorage) return;
+      lastPersisted.current = e.newValue;
+      // A null newValue means the key was removed — treat it as an empty bag.
+      dispatch({ type: 'sync', state: parseCart(e.newValue) });
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   /* Lock the page behind the drawer, and close on Escape. */
   useEffect(() => {
