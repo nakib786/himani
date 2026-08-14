@@ -42,7 +42,7 @@ export function AnnouncementBar() {
     <div
       data-ground="dark"
       data-topo="off"
-      className="relative"
+      className="announcement-bar relative"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}

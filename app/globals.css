@@ -245,6 +245,45 @@
     color: var(--color-espresso);
   }
 
+  /* --- Scrollbar --------------------------------------------------------- */
+  /* The gutter belongs to the document, and the document's ground is espresso
+     (see the <html> background above), so the track is espresso whichever band
+     happens to be on screen — a bone track would strobe as you scroll past the
+     dark sections. The thumb is the lit gold pulled halfway back toward the
+     ground: at full strength it competes with the accent rules and buttons.
+
+     Both syntaxes are here on purpose. Chrome 121+, Firefox and Safari 18.2+
+     honour the standard properties and ignore the `::-webkit-` block entirely
+     — that block is only reached by older WebKit/Blink, where it produces the
+     same two colours by other means. */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-gold-lit) 62%, var(--color-espresso))
+      var(--color-espresso);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: var(--color-espresso);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-gold-lit) 62%, var(--color-espresso));
+    /* Border in the track colour, so the thumb reads as an inset capsule with
+       breathing room rather than a bar filling the gutter edge to edge. */
+    border: 2px solid var(--color-espresso);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gold-lit);
+  }
+
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
@@ -972,6 +1011,141 @@ main[data-ground] > *,
 }
 
 /* ==========================================================================
+   HERO SLIDESHOW
+
+   Every frame lives in the SAME `.plate` and they are stacked, so the plate
+   keeps its square aspect, its `drift` parallax and its hover scale untouched.
+   Three states:
+
+     on     the frame arriving — unclipped, top of the stack, and the only one
+            carrying a transition, so it wipes UP from its own baseline
+     under  the frame it replaced — unclipped, one layer down. This is what the
+            wipe reveals against; without it the incoming frame would wipe over
+            the plate's bare ground and the show would flash on every advance.
+     off    clipped to nothing, bottom of the stack. Buried under two full
+            frames, so it can snap back with no transition and never be seen.
+
+   The wipe direction matches `unmask` on the headline above it deliberately —
+   see the note in components/home/HeroSlideshow.tsx.
+   ========================================================================== */
+
+.slide-frame {
+  z-index: 0;
+  clip-path: inset(0 0 100% 0);
+}
+
+.slide-frame[data-state='under'] {
+  z-index: 1;
+  clip-path: inset(0 0 0 0);
+}
+
+/* `.plate img` (0,1,1) owns the plate's transition list, and a shorthand
+   replaces it wholesale — so this selector is compounded to (0,2,0) purely to
+   outrank it, and restates the transform transition it would otherwise drop. */
+.slide-frame[data-state='on'] {
+  z-index: 2;
+  clip-path: inset(0 0 0 0);
+  transition:
+    clip-path 900ms var(--ease-out-expo),
+    transform 1200ms var(--ease-out-expo);
+}
+
+/* The caption takes the same wipe. Keyed on the active index in React, which
+   remounts the row — that is what replays a time-based animation. */
+@keyframes slide-wipe {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.slide-meta {
+  animation: slide-wipe 720ms var(--ease-out-expo) both;
+}
+
+/* --- The index ---------------------------------------------------------- */
+/* Numerals on a hairline, not dots: `index-num` is already the site's counter
+   voice (section headers 01–04, the gallery's "02 / 05"). The segment over the
+   ACTIVE numeral fills left to right across the dwell, so the rule itself is
+   the countdown and nothing else has to be drawn to show one. */
+
+.slide-tick {
+  position: relative;
+  padding-block: 0.875rem 0.5rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* `.index-num` is unlayered and would beat any Tailwind colour utility here,
+   so the inactive state is set by a compound selector instead. */
+.slide-tick .index-num {
+  color: var(--fg-mute);
+  transition: color 500ms var(--ease-drape);
+}
+
+.slide-tick[aria-current='true'] .index-num {
+  color: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .slide-tick:hover .index-num {
+    color: var(--fg);
+  }
+}
+
+/* The segment's own hairline … */
+.slide-tick::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* … and the gold drawn over it. `scaleX` from a left origin rather than an
+   animated width: a transform runs on the compositor, a width relayouts the
+   row on every frame. */
+.slide-tick::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.slide-tick[aria-current='true']::after {
+  animation: slide-tick-fill var(--dwell, 5500ms) linear both;
+}
+
+/* Pointer on the card, focus inside it, hero off screen or tab in the
+   background: the timer stops, so the fill freezes exactly where it stopped
+   rather than carrying on and lying about how long is left. */
+[data-holding='true'] .slide-tick[aria-current='true']::after {
+  animation-play-state: paused;
+}
+
+@keyframes slide-tick-fill {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Nothing auto-advances under reduced motion, so a fill would be counting down
+   to an event that never comes. The active segment is simply solid gold. */
+@media (prefers-reduced-motion: reduce) {
+  .slide-tick[aria-current='true']::after {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
    SCROLL-DRIVEN MOTION
 
    Native CSS scroll-driven animations — no JS, no IntersectionObserver, no
@@ -1081,14 +1255,24 @@ main[data-ground] > *,
 }
 
 /* ==========================================================================
-   FOOTER STAR DRIFT
-   Sparkles crossing the oversized footer wordmark. Three axes, three elements
-   — see components/brand/WatermarkStars.tsx for the choreography.
+   STAR DRIFT
+   Sparkles crossing a target — the footer wordmark and the header lockup.
+   Three axes, three elements; see components/brand/StarDrift.tsx for the
+   choreography and the per-field tuning.
 
-   Distances are in `cqw`, resolved against the wordmark's own container, so a
-   crossing is exactly one wordmark wide at every viewport. The 6cqw overshoot
-   at each end puts entry and exit off-stage: the footer clips overflow-x, so
-   a star fades off the edge instead of popping out of existence mid-air.
+   The travel distance is a percentage, and `.star` is stretched to the full
+   width of the field so that percentage resolves to one crossing. That is the
+   whole reason for the full-width track: a percentage `translate` resolves
+   against the element's OWN border box, so a star sized to its glyph would
+   travel a few pixels. Sizing the track instead of the glyph keeps the same
+   keyframes correct over a 1400px watermark and a 180px lockup, with no
+   container query and no JS measurement.
+
+   The 6% overshoot at each end carries entry and exit past the target. In the
+   footer that is a true off-stage: the footer clips overflow-x, so a star
+   leaves at the edge. The header does not clip, so there a star simply rounds
+   the end of the lockup — which is why that field's inset runs wide and its
+   travel is short enough to keep the turn near the wordmark.
    ========================================================================== */
 
 .star-field {
@@ -1104,6 +1288,7 @@ main[data-ground] > *,
   position: absolute;
   top: var(--lane);
   left: 0;
+  width: 100%;
   animation: star-cross var(--cross) linear var(--delay) infinite;
 }
 
@@ -1113,19 +1298,19 @@ main[data-ground] > *,
 
 @keyframes star-cross {
   from {
-    translate: -6cqw 0;
+    translate: -6% 0;
   }
   to {
-    translate: 106cqw 0;
+    translate: 106% 0;
   }
 }
 
 @keyframes star-cross-back {
   from {
-    translate: 106cqw 0;
+    translate: 106% 0;
   }
   to {
-    translate: -6cqw 0;
+    translate: -6% 0;
   }
 }
 
@@ -1158,13 +1343,22 @@ main[data-ground] > *,
 
 @keyframes star-twinkle {
   from {
-    opacity: 0.25;
+    opacity: calc(var(--star-peak, 0.9) * 0.28);
     transform: scale(0.55) rotate(-18deg);
   }
   to {
-    opacity: 0.9;
+    opacity: var(--star-peak, 0.9);
     transform: scale(1) rotate(18deg);
   }
+}
+
+/* The header field runs a little wide of the lockup so the stars round its
+   ends rather than stopping at the wordmark's last letter, and peaks dimmer
+   than the footer's: this bar is on screen the whole session, sitting next to
+   the nav links, so the flourish has to stay under them. */
+.star-field[data-field='lockup'] {
+  inset: -0.3rem -0.75rem;
+  --star-peak: 0.7;
 }
 
 /* The blanket reduced-motion rule below freezes animations at frame one, which
@@ -1175,6 +1369,163 @@ main[data-ground] > *,
   .star-field {
     display: none;
   }
+}
+
+/* ==========================================================================
+   ANNOUNCEMENT BAR / MOBILE DRAWER
+   The drawer is `fixed` at top-16 (md: top-20) — the sticky header's own
+   height — which assumes the header is flush against the top of the viewport.
+   It is not, while the page is unscrolled and the announcement bar is in flow
+   above it: the header sits 40px lower, and the drawer opens across the
+   header's lower half. Scrolling then slides the two in and out of alignment,
+   which is the tearing you see while the menu is open.
+
+   Taking the bar out of flow puts the header back on the top edge, so the
+   drawer's offset is correct again. It also stops the 6.5s copy rotation
+   running behind a menu nobody can see it through.
+   ========================================================================== */
+
+body[data-menu='open'] .announcement-bar {
+  display: none;
+}
+
+/* ==========================================================================
+   POINTER STARS
+   Star cursor + sparkle trail. See components/brand/PointerStars.tsx.
+   ========================================================================== */
+
+/* White, like the header and footer star drifts — one sparkle colour across
+   the whole site.
+
+   NEVER give this element `data-ground`. It is fixed and full-screen, and the
+   ground contract paints `background-color: var(--bg)` on anything carrying
+   that attribute — which blanks the entire page. The halo below is what lets
+   a white star hold up on the bone bands instead: two dark drop-shadows,
+   invisible against espresso, an outline against cream. */
+.pointer-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: none;
+  color: #fff;
+  --star-halo: drop-shadow(0 0 1px rgb(20 16 11 / 0.55))
+    drop-shadow(0 0 5px rgb(20 16 11 / 0.35));
+}
+
+/* The layer starts invisible and is revealed by the first real pointer move:
+   without this the cursor sits parked at 0,0 in the top-left corner until the
+   mouse is touched. */
+.pointer-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity 220ms var(--ease-drape);
+}
+
+.pointer-layer[data-active] .pointer-cursor {
+  opacity: 1;
+}
+
+.pointer-cursor-star {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  filter: var(--star-halo);
+  transition:
+    scale 320ms var(--ease-drape),
+    rotate 520ms var(--ease-drape),
+    opacity 220ms var(--ease-drape);
+}
+
+.pointer-cursor-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 2px;
+  margin: -1px 0 0 -1px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* Caret bar — the I-beam's replacement, shown only over text fields. */
+.pointer-cursor-caret {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 1.1rem;
+  margin: -0.55rem 0 0 -0.5px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 180ms var(--ease-drape);
+}
+
+/* Over something clickable the star opens up and turns; over text it gets out
+   of the way and hands over to the caret. */
+.pointer-cursor[data-over='hit'] .pointer-cursor-star {
+  scale: 1.55;
+  rotate: 45deg;
+}
+
+.pointer-cursor[data-over='text'] .pointer-cursor-star {
+  scale: 0.5;
+  opacity: 0.35;
+}
+
+.pointer-cursor[data-over='text'] .pointer-cursor-caret {
+  opacity: 0.9;
+}
+
+/* The trail. `translate`/`rotate`/`scale` are animated as individual
+   properties so the static centring `transform` below survives untouched. */
+.pointer-star {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  background: currentColor;
+  mask-image: var(--star-mask);
+  mask-size: 100% 100%;
+  -webkit-mask-image: var(--star-mask);
+  -webkit-mask-size: 100% 100%;
+  filter: var(--star-halo);
+  animation: pointer-star-fall 1200ms var(--ease-out-expo) forwards;
+}
+
+/* The brand sparkle as a mask, so a particle is one <span> with no SVG
+   namespace juggling — the geometry matches starPath() exactly. */
+.pointer-layer {
+  --star-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M12 0Q12 12 24 12Q12 12 12 24Q12 12 0 12Q12 12 12 0Z'/%3E%3C/svg%3E");
+}
+
+@keyframes pointer-star-fall {
+  0% {
+    opacity: 0;
+    scale: 0.2;
+  }
+  22% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.25;
+    translate: var(--dx) var(--dy);
+    rotate: var(--spin);
+  }
+}
+
+/* Hiding the native cursor is set from JS on <html>, never in the stylesheet:
+   if the component throws or never mounts, the arrow is still there. The
+   descendant selector is needed because links, buttons and inputs each set
+   their own `cursor` and would otherwise win. */
+[data-cursor='star'],
+[data-cursor='star'] * {
+  cursor: none;
 }
 
 /* ==========================================================================

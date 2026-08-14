@@ -4,6 +4,7 @@ import {
   MARK_SUN,
   MARK_VIEWBOX,
 } from './logoPaths';
+import { LockupStars } from './StarDrift';
 
 /**
  * KSHYOVRATA — logo system
@@ -123,12 +124,19 @@ export function LogoLockup({
  * on a 375px viewport. `.wordmark-compact` pulls the tracking in over the same
  * breakpoint — it has to be CSS rather than a `tracking-*` utility, since
  * `.wordmark` is unlayered and outranks any Tailwind utility on the element.
+ *
+ * The star field overlays the lockup and is positioned against it, so this
+ * span carries `relative`. It cannot be a container query the way the footer
+ * watermark is: this box is sized by its own contents, and `container-type:
+ * inline-size` would apply inline-size containment and collapse it to nothing.
+ * The drift keyframes travel in percentages precisely so they work here too.
  */
 export function LogoHorizontal({ className }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-2 sm:gap-3 ${className ?? ''}`}>
+    <span className={`relative inline-flex items-center gap-2 sm:gap-3 ${className ?? ''}`}>
       <Monogram className="h-10 w-auto shrink-0 sm:h-12" />
       <Wordmark className="wordmark-compact whitespace-nowrap text-[0.6rem] sm:text-[0.95rem]" />
+      <LockupStars />
     </span>
   );
 }

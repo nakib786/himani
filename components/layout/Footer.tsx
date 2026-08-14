@@ -1,17 +1,24 @@
 import Link from 'next/link';
 import { LogoLockup } from '@/components/brand/Logo';
 import { IconInstagram, LogoAmazon, MarkShield, RuleDot } from '@/components/brand/Motifs';
-import { WatermarkStars } from '@/components/brand/WatermarkStars';
+import { WatermarkStars } from '@/components/brand/StarDrift';
 import { NewsletterForm } from './NewsletterForm';
-import { COMMERCE, FOOTER_NAV, PENDING_CLIENT_DATA, SITE } from '@/lib/site';
+import { COMMERCE, FOOTER_NAV, SITE } from '@/lib/site';
 
 /**
  * Footer.
  *
- * Also carries the disclosures required by the Consumer Protection
- * (E-Commerce) Rules 2020: legal entity, registered address, customer care and
- * a named Grievance Officer with a response SLA. Values marked [PENDING] come
- * from lib/site.ts and must be replaced before launch.
+ * NOTE ON THE SELLER DISCLOSURES: this footer used to carry the block required
+ * by the Consumer Protection (E-Commerce) Rules 2020 — legal entity,
+ * registered address, customer care, and a named Grievance Officer with a
+ * response SLA. It was removed at the client's instruction on the grounds that
+ * the brand is online-only.
+ *
+ * Recorded here because the reasoning inverts the rule: those obligations
+ * attach to e-commerce entities specifically, so selling online is what
+ * triggers them. The values still live in PENDING_CLIENT_DATA in lib/site.ts
+ * and are still used by the policy pages, contact page and JSON-LD, so
+ * restoring the block is a paste, not a rebuild.
  */
 export function Footer() {
   const year = new Date().getFullYear();
@@ -84,50 +91,6 @@ export function Footer() {
               </ul>
             </nav>
           ))}
-        </div>
-      </div>
-
-      {/* ---- Statutory disclosures ---- */}
-      <div className="border-t border-rule">
-        <div className="shell py-10">
-          <h2 className="eyebrow">Seller &amp; Grievance Redressal</h2>
-          <div className="mt-5 grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <p className="caption text-fg-mute">Legal entity</p>
-              <p className="caption mt-1 text-fg-soft">{PENDING_CLIENT_DATA.legalEntity}</p>
-            </div>
-            <div>
-              <p className="caption text-fg-mute">Registered address</p>
-              <p className="caption mt-1 text-fg-soft">
-                {PENDING_CLIENT_DATA.registeredAddress}
-              </p>
-            </div>
-            <div>
-              <p className="caption text-fg-mute">Customer care</p>
-              <p className="caption mt-1 text-fg-soft">
-                <a href={`mailto:${PENDING_CLIENT_DATA.customerCareEmail}`} className="link-rule">
-                  {PENDING_CLIENT_DATA.customerCareEmail}
-                </a>
-                <br />
-                {PENDING_CLIENT_DATA.customerCareHours}
-              </p>
-            </div>
-            <div>
-              <p className="caption text-fg-mute">Grievance Officer</p>
-              <p className="caption mt-1 text-fg-soft">
-                {PENDING_CLIENT_DATA.grievanceOfficerName}
-                <br />
-                <a
-                  href={`mailto:${PENDING_CLIENT_DATA.grievanceOfficerEmail}`}
-                  className="link-rule"
-                >
-                  {PENDING_CLIENT_DATA.grievanceOfficerEmail}
-                </a>
-                <br />
-                Response within {PENDING_CLIENT_DATA.grievanceResponseSlaDays} working days
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 

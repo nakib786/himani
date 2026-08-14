@@ -3,12 +3,12 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 import { IconArrowRight, IconInstagram, RuleDot } from '@/components/brand/Motifs';
+import { HeroSlideshow } from '@/components/home/HeroSlideshow';
 import { TrustStrip } from '@/components/home/TrustStrip';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { Reveal } from '@/components/ui/Reveal';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { commerce } from '@/lib/commerce';
-import { formatPrice } from '@/lib/format';
 import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -64,7 +64,18 @@ const MARQUEE = [
 export default async function HomePage() {
   const featured = await commerce.listProducts({ sort: 'featured' });
   const hero = featured.find((p) => p.slug === 'papillon-wing-earrings') ?? featured[0];
-  const heroImage = hero.images[0];
+
+  // The butterfly still opens the hero — it is the newest piece and the one the
+  // house mark is drawn from — and the rest of the range follows it in featured
+  // order. Only the four fields the plate renders cross to the client: passing
+  // whole Product objects would ship five long descriptions into the RSC
+  // payload to display a title and a price.
+  const heroSlides = [hero, ...featured.filter((p) => p.slug !== hero.slug)].map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    price: p.price,
+    image: p.images[0],
+  }));
 
   // Resolved up front — an async callback inside .map() returns an array of
   // promises, which React will not render.
@@ -128,25 +139,7 @@ export default async function HomePage() {
             </div>
 
             <div className="md:col-span-6 md:col-start-7">
-              <Link href={`/product/${hero.slug}`} className="card group block">
-                <div className="plate plate-square drift">
-                  <Image
-                    src={heroImage.url}
-                    alt={heroImage.alt}
-                    width={heroImage.width}
-                    height={heroImage.height}
-                    priority
-                    fetchPriority="high"
-                    sizes="(min-width: 768px) 48vw, 100vw"
-                  />
-                </div>
-                <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-rule pt-3">
-                  <span className="caption transition-colors duration-500 group-hover:text-accent">
-                    {hero.title}
-                  </span>
-                  <span className="tabular caption">{formatPrice(hero.price)}</span>
-                </div>
-              </Link>
+              <HeroSlideshow slides={heroSlides} />
             </div>
           </div>
 

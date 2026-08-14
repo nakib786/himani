@@ -307,6 +307,36 @@ export function IconArrowRight({ className }: MotifProps) {
   );
 }
 
+/**
+ * Track order — a van under a dropped pin, bridged by a dashed route.
+ *
+ * The three-part composition (vehicle, journey, destination) is the standard
+ * reading for parcel tracking; drawn here in the house vocabulary — hairline,
+ * `currentColor`, one 24-unit grid — so it sits beside the search and bag
+ * glyphs instead of importing a second icon language into the header.
+ *
+ * The route arcs OVER the cab rather than through it: the cab occupies the
+ * grid from x10.6 y13.6 down, and a straight line between van and pin would
+ * cut across it. The dash pattern is deliberately coarse for the size — at the
+ * header's 18px the gaps are under a pixel, and anything finer greys out.
+ */
+export function IconTrackOrder({ className }: MotifProps) {
+  return (
+    <svg {...iconBase} className={className}>
+      {/* Van — box body, cab, wheels sitting into the body line. */}
+      <path d="M2.4 11.8h8.2v5.8H2.4z" />
+      <path d="M10.6 13.6h2.9l2.6 2.7v1.3h-5.5z" />
+      <circle cx="5.6" cy="18.9" r="1.4" />
+      <circle cx="13.4" cy="18.9" r="1.4" />
+      {/* Route. */}
+      <path d="M6.4 11.5C7.6 7.4 13.4 6 17.2 9.6" strokeDasharray="1.6 1.8" />
+      {/* Pin. */}
+      <path d="M17.4 10.1c1.9-2.4 3.1-3.9 3.1-5.4a3.1 3.1 0 0 0-6.2 0c0 1.5 1.2 3 3.1 5.4Z" />
+      <circle cx="17.4" cy="4.7" r="1.15" />
+    </svg>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /* Third-party marks                                                           */
 /*                                                                             */

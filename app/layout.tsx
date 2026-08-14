@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer';
 import { CartProvider } from '@/components/cart/CartProvider';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { CookieConsent } from '@/components/layout/CookieConsent';
+import { PointerStars } from '@/components/brand/PointerStars';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { organizationLd, websiteLd } from '@/lib/seo';
 import { SITE } from '@/lib/site';
@@ -125,6 +126,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <CartDrawer />
           <CookieConsent />
+          {/* Last child, so its fixed layer stacks above the drawers and the
+              consent sheet without needing a z-index arms race. */}
+          <PointerStars />
         </CartProvider>
 
         <JsonLd data={[organizationLd(), websiteLd()]} />

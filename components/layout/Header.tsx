@@ -9,6 +9,7 @@ import {
   IconClose,
   IconMenu,
   IconSearch,
+  IconTrackOrder,
   RuleDot,
 } from '@/components/brand/Motifs';
 import { useCart } from '@/components/cart/CartProvider';
@@ -43,8 +44,12 @@ export function Header() {
     setSearchOpen(false);
   }, [pathname]);
 
+  /* `menu` is separate from `locked` on purpose. The cart drawer sets `locked`
+     too, and the announcement bar keys off this — hiding the bar when the cart
+     opens would shift the page up 40px behind the overlay for no reason. */
   useEffect(() => {
     document.body.dataset.locked = menuOpen ? 'true' : 'false';
+    document.body.dataset.menu = menuOpen ? 'open' : 'closed';
   }, [menuOpen]);
 
   useEffect(() => {
@@ -128,20 +133,25 @@ export function Header() {
             </button>
 
             {/* There are no accounts — checkout is guest-only and orders are
-                looked up by order number. A person glyph here promised a
-                sign-in that does not exist, so the slot carries the thing it
-                actually does, spelled out.
+                looked up by order number. This slot used to be spelled out
+                because the obvious glyph for it, a person, promised a sign-in
+                that does not exist; a van under a dropped pin has no such
+                problem — it says tracking and nothing else — so the row is now
+                three even glyphs rather than two and a word. `title` carries
+                the label on hover for anyone who reads it as a truck.
 
                 Below lg this lives in the drawer instead, keeping the row to
                 search and bag. The display utility sits on the wrapper: on the
-                link itself it would lose to `.link-nav`, which sets
-                `display: inline-block` unlayered and so outranks it. */}
-            <span className="mr-2 hidden lg:block">
+                link itself it would lose to `.icon-btn`, which sets
+                `display: inline-flex` unlayered and so outranks it. */}
+            <span className="hidden lg:block">
               <Link
                 href="/track-order"
-                className="link-nav text-[0.625rem] tracking-[0.2em] uppercase"
+                className="icon-btn"
+                aria-label="Track your order"
+                title="Track your order"
               >
-                Track Order
+                <IconTrackOrder className="h-[1.15rem] w-[1.15rem]" />
               </Link>
             </span>
 
