@@ -1,21 +1,16 @@
 import { NextResponse } from 'next/server';
 import { PENDING_CLIENT_DATA } from '@/lib/site';
+import { careInbox, escapeHtml, sendEmail } from '@/lib/email';
 
 /**
  * Contact form handler.
  *
+ * Delivered to the care inbox through the Cloudflare Email Sending binding —
+ * see lib/email.ts for the prerequisites. `replyTo` is set to the visitor so
+ * answering the notification answers the customer.
+ *
  * ── BEFORE LAUNCH ───────────────────────────────────────────────────────────
- * Deliver these to the customer-care inbox. With Resend:
- *
- *   await resend.emails.send({
- *     from: 'Kshyovrata <care@kshyovrata.com>',
- *     to: [process.env.CARE_INBOX!],
- *     replyTo: email,
- *     subject: `[${topic}] ${name}`,
- *     text: body,
- *   });
- *
- * Add rate limiting (Vercel KV or Upstash) before going live — this endpoint
+ * Add rate limiting (Workers KV or the Rate Limiting binding) — this endpoint
  * is otherwise an open relay for spam.
  */
 
@@ -61,8 +56,36 @@ export async function POST(request: Request) {
     );
   }
 
-  // Replace with the provider call described above.
-  console.info('[contact] message received', { name, email, topic, orderId });
+  const lines = [
+    `Name:   ${name}`,
+    `Email:  ${email}`,
+    `Topic:  ${topic}`,
+    ...(orderId ? [`Order:  ${orderId}`] : []),
+    '',
+    message,
+  ];
+
+  const sent = await sendEmail({
+    to: careInbox(),
+    replyTo: email,
+    subject: `[${topic}] ${name}`,
+    text: lines.join('\n'),
+    html: `<pre style="font:14px/1.6 ui-monospace,monospace;white-space:pre-wrap">${escapeHtml(
+      lines.join('\n'),
+    )}</pre>`,
+  });
+
+  if (!sent.ok) {
+    // Say so rather than pretending the message landed. The address below is
+    // the same inbox, reached without going through this endpoint.
+    return NextResponse.json(
+      {
+        ok: false,
+        message: `We could not deliver your message just now. Please email ${PENDING_CLIENT_DATA.customerCareEmail} directly and we will pick it up from there.`,
+      },
+      { status: 502 },
+    );
+  }
 
   return NextResponse.json({
     ok: true,

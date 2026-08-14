@@ -1,0 +1,45 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "kshyovrata",
+
+  // Built by the OpenNext adapter (`opennextjs-cloudflare build`), not by hand.
+  // `.open-next/` is generated output and is gitignored.
+  "main": ".open-next/worker.js",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "compatibility_date": "2026-08-13",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "account_id": "47891dbd8bb00200d07113ef07d53fff",
+
+  "observability": {
+    "enabled": true
+  },
+
+  // Cloudflare Email Sending. Same binding shape as the ninthhouse2 Worker:
+  // one `EMAIL` binding, `remote: true` so `next dev` and `wrangler dev` send
+  // through the real service instead of a local stub.
+  //
+  // The `from` domain must be onboarded before any send succeeds:
+  //   npx wrangler email sending enable kshyovrata.com
+  // Until that is done, sends fail with E_SENDER_NOT_VERIFIED and the API
+  // routes fall back to logging (see lib/email.ts).
+  "send_email": [{ "name": "EMAIL", "remote": true }],
+
+  "vars": {
+    // Non-secret runtime config. Anything secret (WIX_API_KEY) is a Worker
+    // secret instead — `npx wrangler secret put WIX_API_KEY`.
+    "NEXT_PUBLIC_SITE_URL": "https://kshyovrata.com",
+    "COMMERCE_BACKEND": "wix",
+    "CONTENT_BACKEND": "wix",
+    "WIX_SITE_ID": "e94f5cb9-6d60-402f-845d-e31e4f9cf165",
+
+    // Where contact-form and newsletter notifications land.
+    "CARE_INBOX": "Nakibshaikh786@gmail.com",
+    // Cloudflare rejects a send where from === to, so these must stay distinct.
+    "CONTACT_EMAIL_FROM": "noreply@kshyovrata.com"
+  }
+}

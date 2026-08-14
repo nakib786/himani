@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -84,5 +85,11 @@ const nextConfig: NextConfig = {
     ];
   },
 };
+
+// Exposes the Worker bindings declared in wrangler.jsonc to `next dev`, so the
+// contact and newsletter routes hit the same EMAIL binding locally as in
+// production. `"remote": true` on the send_email binding is what sends dev
+// mail through the real service rather than a local stub.
+initOpenNextCloudflareForDev();
 
 export default nextConfig;

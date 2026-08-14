@@ -10,6 +10,11 @@ yarn-error.log*
 .env*
 !.env.example
 .vercel
+
+# Cloudflare
+.open-next/
+.wrangler/
+cloudflare-env.d.ts
 *.tsbuildinfo
 next-env.d.ts.bak
 __pycache__/
