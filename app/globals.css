@@ -1,0 +1,1075 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   KSHYOVRATA — DESIGN SYSTEM
+
+   Two grounds, one accent.
+
+   The page alternates between an ESPRESSO band (hero, story, footer) and a
+   GALLERY band (shop, product, editorial). Gold-plated jewellery photographs
+   as warm metal against dark, and as sharp silhouette against near-white —
+   so the site uses both rather than picking one and losing half the range.
+
+   Every surface declares its own ground with `data-ground="dark" | "light"`.
+   Components read semantic tokens (--fg, --bg, --rule …) and never reference
+   a palette value directly, so a single attribute flips a whole section.
+   ========================================================================== */
+
+@theme {
+  /* --- Espresso ground -------------------------------------------------- */
+  --color-espresso: #14100b; /* the dark band */
+  --color-espresso-lift: #1e1811; /* recessed panels on dark */
+  --color-espresso-line: #34291d; /* hairlines on dark */
+
+  /* --- Gallery ground --------------------------------------------------- */
+  --color-bone: #f4f2ed; /* the light band — warm, never pure #FFF */
+  --color-bone-lift: #eae6dd; /* recessed panels on light */
+  --color-paper: #ffffff; /* product plates only */
+  --color-line: #ddd7cb; /* hairlines on light */
+
+  /* --- Ink -------------------------------------------------------------- */
+  --color-ink: #14110d;
+  --color-ink-soft: #4a443b;
+  --color-ink-mute: #6b6459;
+
+  /* --- Bone type (on espresso) ------------------------------------------ */
+  --color-cream: #efe9dc;
+  --color-cream-soft: #b9b0a0;
+  --color-cream-mute: #8b8272;
+
+  /* --- Gold ------------------------------------------------------------- */
+  /* Two gold values because contrast is ground-dependent. Measured in-browser:
+     --gold-lit  #c9a227 on espresso #14100B = 7.83:1  (AA all sizes)
+     --gold-deep #7a5c1e on bone     #F4F2ED = 5.56:1  (AA all sizes)
+     Neither is ever used for text on the opposite ground.
+
+     Full token audit, both grounds — every pair clears AA body text (4.5):
+       bone:     ink 16.82 · soft 8.61 · mute 5.23 · gold 5.56
+       espresso: cream 15.66 · soft 8.82 · mute 4.99 · gold 7.83 */
+  --color-gold-lit: #c9a227; /* accent on dark */
+  --color-gold-deep: #7a5c1e; /* accent on light */
+
+  --color-success: #2e6b4f;
+  --color-error: #a63a2e;
+
+  /* NOTE: there are deliberately no `--color-fg: var(--fg)` style aliases in
+     here. A custom property is substituted at computed-value time on the
+     element that DECLARES it, and the result then inherits — so an alias
+     declared at :root freezes to the light value and carries it into every
+     dark band. The ground-aware utilities are hand-written further down
+     against the raw tokens instead, which are redeclared per ground and so
+     do re-resolve. */
+
+  /* --- Type ------------------------------------------------------------- */
+  /* Italiana carries the display sizes only — it is a single-weight hairline
+     face with no true italic, and it collapses below ~28px. Instrument Sans
+     does everything else, including anything that used to be small serif. */
+  --font-display: var(--font-italiana), 'Italiana', Didot, 'Bodoni MT', serif;
+  --font-sans: var(--font-instrument), 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* --- Motion ----------------------------------------------------------- */
+  --ease-drape: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* ==========================================================================
+   GROUND CONTRACT
+   Semantic tokens. Set once per band; every component below reads these.
+   ========================================================================== */
+
+:root,
+[data-ground='light'] {
+  --bg: var(--color-bone);
+  --bg-lift: var(--color-bone-lift);
+  --fg: var(--color-ink);
+  --fg-soft: var(--color-ink-soft);
+  --fg-mute: var(--color-ink-mute);
+  --rule: var(--color-line);
+  --rule-strong: #c8c0b0;
+  --accent: var(--color-gold-deep);
+  --plate-bg: var(--color-paper);
+}
+
+[data-ground='dark'] {
+  --bg: var(--color-espresso);
+  --bg-lift: var(--color-espresso-lift);
+  --fg: var(--color-cream);
+  --fg-soft: var(--color-cream-soft);
+  --fg-mute: var(--color-cream-mute);
+  --rule: var(--color-espresso-line);
+  --rule-strong: #4a3b2a;
+  --accent: var(--color-gold-lit);
+  --plate-bg: var(--color-espresso-lift);
+}
+
+/* A band paints its own ground and inherits its own foreground.
+   This lives in @layer base on purpose: unlayered rules outrank every layered
+   one, so at top level `[data-ground]` (0,1,0) would beat `.bg-transparent`
+   (0,1,0) on source order and a transparent header could never be declared. */
+@layer base {
+  [data-ground] {
+    background-color: var(--bg);
+    color: var(--fg);
+  }
+}
+
+/* ==========================================================================
+   GROUND-AWARE UTILITIES
+
+   Hand-written rather than generated from @theme, for the reason given above:
+   these must read --fg / --rule / --accent directly so each one re-resolves
+   inside whichever band it lands in. Same class names Tailwind would have
+   produced, so markup reads normally.
+   ========================================================================== */
+
+@layer utilities {
+  .text-fg {
+    color: var(--fg);
+  }
+  .text-fg-soft {
+    color: var(--fg-soft);
+  }
+  .text-fg-mute {
+    color: var(--fg-mute);
+  }
+  .text-bg {
+    color: var(--bg);
+  }
+  .text-accent {
+    color: var(--accent);
+  }
+
+  .bg-bg {
+    background-color: var(--bg);
+  }
+  .bg-bg-lift {
+    background-color: var(--bg-lift);
+  }
+  .bg-fg {
+    background-color: var(--fg);
+  }
+  .bg-rule {
+    background-color: var(--rule);
+  }
+  .bg-rule-strong {
+    background-color: var(--rule-strong);
+  }
+  .bg-accent {
+    background-color: var(--accent);
+  }
+
+  .border-rule {
+    border-color: var(--rule);
+  }
+  .border-rule-strong {
+    border-color: var(--rule-strong);
+  }
+  .border-fg {
+    border-color: var(--fg);
+  }
+  .divide-rule > * + * {
+    border-color: var(--rule);
+  }
+
+  /* The oversized footer wordmark — a tint of the muted foreground. */
+  .text-watermark {
+    color: color-mix(in srgb, var(--fg-mute) 22%, transparent);
+  }
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* The dark bands run to the top and bottom of the document, so the
+       overscroll gutter must not flash bone. */
+    background-color: var(--color-espresso);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    /* Ground and colour come from [data-ground] on <body> itself — see
+       app/layout.tsx. Nothing is hardcoded here or the two would fight. */
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.6;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* `clip`, NOT `hidden`. `overflow-x: hidden` forces overflow-y to `auto`,
+       which turns the body into a scroll container — and a scroll container
+       between an element and the viewport makes every descendant `view()`
+       timeline INACTIVE, so scroll-driven animations attach but never drive.
+       `clip` crops the same way without establishing one. */
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 400;
+    line-height: 1;
+    text-wrap: balance;
+  }
+
+  .tabular,
+  time,
+  [data-price] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  ::selection {
+    background: var(--color-gold-lit);
+    color: var(--color-espresso);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
+
+  img,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+}
+
+/* ==========================================================================
+   GRAIN
+   A single tiling SVG of fractal noise over the dark bands only. Flat dark
+   fields band badly on 8-bit displays; the grain hides it and gives the
+   espresso a paper tooth instead of reading as a #000 rectangle.
+   ========================================================================== */
+
+/* Opt-in via `data-grain`, NOT automatic on every dark ground — the header is
+   also a dark ground but spends most of its life transparent, and an
+   unconditional overlay would render a grey film over the hero beneath it. */
+[data-grain] {
+  position: relative;
+}
+
+[data-grain]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.055;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Grain sits under content, never over it. */
+[data-grain] > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   LAYOUT PRIMITIVES
+   ========================================================================== */
+
+.shell {
+  width: 100%;
+  max-width: 88rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .shell {
+    padding-inline: 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .shell {
+    padding-inline: 4rem;
+  }
+}
+
+/* A shell that keeps its left gutter but runs off the right edge. Used for
+   horizontal rails so the row reads as continuing past the viewport. */
+.shell-bleed-r {
+  width: 100%;
+  max-width: 88rem;
+  margin-inline: auto;
+  padding-left: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .shell-bleed-r {
+    padding-left: 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .shell-bleed-r {
+    padding-left: 4rem;
+  }
+}
+
+.section {
+  padding-block: 6rem;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-block: 9rem;
+  }
+}
+
+.section-tight {
+  padding-block: 4rem;
+}
+
+@media (min-width: 768px) {
+  .section-tight {
+    padding-block: 6rem;
+  }
+}
+
+.measure {
+  max-width: 62ch;
+}
+
+.measure-tight {
+  max-width: 44ch;
+}
+
+/* ==========================================================================
+   TYPE SCALE
+
+   Italiana is a hairline display face. It is allowed at three sizes and
+   nowhere else. Below `display-md` everything is Instrument Sans, because
+   a 17px high-contrast serif turns to mush and is exactly the tell that
+   made the previous build read as a template.
+   ========================================================================== */
+
+.display-xl {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3.25rem, 13vw, 11rem);
+  line-height: 0.86;
+  letter-spacing: -0.015em;
+}
+
+.display-lg {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.012em;
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 4vw, 3.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.008em;
+}
+
+/* Below display sizes the sans takes over. This is the sub-heading used for
+   cart lines, care principles and about-page columns — deliberately NOT
+   Italiana: a hairline display serif at 18px is precisely the mush that made
+   the previous build read as a template. */
+.display-sm {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+}
+
+/* The wordmark: Italiana, wide-tracked caps — lifted off the logo artwork. */
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  line-height: 1;
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  color: var(--fg-mute);
+}
+
+/* An eyebrow doing duty as a real section heading rather than a label. */
+.eyebrow-ink {
+  color: var(--fg);
+}
+
+.index-num {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.body-lg {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--fg-soft);
+}
+
+.body-sm {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--fg-soft);
+}
+
+.caption {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--fg-mute);
+}
+
+/* ==========================================================================
+   RULES
+   ========================================================================== */
+
+.rule {
+  height: 1px;
+  width: 100%;
+  background: var(--rule);
+  border: 0;
+}
+
+.rule-dot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--rule-strong);
+}
+
+.rule-dot::before,
+.rule-dot::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+}
+
+.spine {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--fg-mute);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   CONTROLS
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.0625rem 2.25rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  cursor: pointer;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    color 500ms var(--ease-drape),
+    border-color 500ms var(--ease-drape),
+    opacity 300ms linear;
+}
+
+/* Fill wipes up from the foot rather than the colour cross-fading. */
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 550ms var(--ease-out-expo);
+}
+
+.btn:hover::before,
+.btn:focus-visible::before {
+  transform: scaleY(1);
+}
+
+.btn-primary {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+.btn-primary::before {
+  background: var(--accent);
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  border-color: var(--accent);
+  color: var(--color-espresso);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--fg) 35%, transparent);
+}
+
+.btn-secondary::before {
+  background: var(--fg);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+/* The quiet one — sits beside an input without competing with it. */
+.btn-ghost {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--rule-strong);
+}
+
+.btn-ghost::before {
+  background: var(--fg);
+}
+
+.btn-ghost:hover,
+.btn-ghost:focus-visible {
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn:disabled::before,
+.btn[aria-disabled='true']::before {
+  display: none;
+}
+
+.btn-sm {
+  padding: 0.75rem 1.4rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  padding-inline: 0.5rem;
+  border-radius: 999px;
+  color: inherit;
+  cursor: pointer;
+  transition: color 400ms var(--ease-drape);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .icon-btn:hover {
+    color: var(--accent);
+  }
+}
+
+.bag-count {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  min-width: 1ch;
+  text-align: left;
+}
+
+.bag-count[data-empty='true'] {
+  visibility: hidden;
+}
+
+/* Underline that retracts to the right and redraws from the left. */
+.link-nav {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+  padding-bottom: 3px;
+}
+
+.link-nav::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 500ms var(--ease-out-expo);
+}
+
+.link-nav:hover::after,
+.link-nav[aria-current='page']::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.link-rule {
+  position: relative;
+  display: inline-block;
+  color: inherit;
+  text-decoration: none;
+  padding-bottom: 2px;
+}
+
+.link-rule::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transition: background-color 400ms var(--ease-drape);
+}
+
+.link-rule:hover::after {
+  background: var(--accent);
+}
+
+/* Form fields */
+.field {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 0.75rem 0;
+  font-size: 0.9375rem;
+  color: var(--fg);
+  transition: border-color 400ms var(--ease-drape);
+}
+
+.field::placeholder {
+  color: var(--fg-mute);
+}
+
+.field:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+.field:focus-visible {
+  outline: none;
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 0 var(--accent);
+}
+
+.field-boxed {
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  padding: 0.8125rem 0.9375rem;
+  background: var(--bg-lift);
+}
+
+.field-boxed:focus,
+.field-boxed:focus-visible {
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   PRODUCT PLATE
+
+   The previous build used `object-fit: contain` inside a 4:5 frame, which
+   left a 12mm ring of empty white around every piece and made the jewellery
+   look like a thumbnail. These are square studio cutouts on white, so the
+   frame now CROPS them: `cover` plus a scale, with the excess white eaten by
+   the frame rather than printed on the page.
+   ========================================================================== */
+
+/* The frame is SQUARE because the source photography is square. The old 4:5
+   portrait frame was the actual cause of the "tiny product" problem: a 1:1
+   image letterboxed into 4:5 spent a fifth of the card's height on empty
+   ground, so the piece read small against a tall card.
+
+   Cropping to 4:5 instead would be worse — the necklace sets span ~88% of
+   their frame width, so a 20% horizontal crop plus a scale would cut the
+   chain off at both ends. Matching the aspect means `cover` crops nothing,
+   and a small scale trims only the uniform white margin. */
+.plate {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--plate-bg);
+  overflow: hidden;
+}
+
+.plate img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 1.06 is set by the widest subject in the catalogue (the Fleur set, ~88%
+     of frame width). Anything more starts eating the necklace. */
+  transform: scale(1.06);
+  transition:
+    opacity 800ms var(--ease-drape),
+    transform 1200ms var(--ease-out-expo);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .plate img {
+    transform: scale(1.11);
+  }
+}
+
+.plate .plate-alt {
+  opacity: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .plate-alt,
+  .card:focus-within .plate-alt {
+    opacity: 1;
+  }
+}
+
+/* Flat-lay and lifestyle frames are already composed — they must not be
+   scaled up or the styling props get cropped out. */
+.plate-lifestyle img {
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .plate-lifestyle img {
+    transform: scale(1.04);
+  }
+}
+
+/* Taller frame for editorial columns. Only safe over lifestyle photography
+   that is already portrait — never over a square product cutout, which it
+   would crop at the sides. */
+.plate-tall {
+  aspect-ratio: 3 / 4;
+}
+
+/* Explicit square, for call sites that want to state it rather than rely on
+   the default. */
+.plate-square {
+  aspect-ratio: 1 / 1;
+}
+
+/* ==========================================================================
+   PRODUCT CARD
+   ========================================================================== */
+
+.card {
+  position: relative;
+}
+
+.card-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.card-title {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.plate-action {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  z-index: 2;
+  display: none;
+  opacity: 0;
+  transform: translateY(0.75rem);
+  pointer-events: none;
+  transition:
+    opacity 450ms var(--ease-drape),
+    transform 550ms var(--ease-out-expo);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .plate-action {
+    display: block;
+  }
+
+  .card:hover .plate-action,
+  .card:focus-within .plate-action {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+/* ==========================================================================
+   SCROLL-DRIVEN MOTION
+
+   Native CSS scroll-driven animations — no JS, no IntersectionObserver, no
+   layout thrash, and they run on the compositor. Where unsupported the
+   @supports guard simply never applies, so content is visible by default
+   rather than hidden behind a class that may never be removed.
+   ========================================================================== */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(2.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes unmask {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes drift {
+  to {
+    transform: translateY(-14%);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Stagger is a shift in the scroll RANGE, not `animation-delay` — a
+       view() timeline is driven by scroll position, so a time-based delay is
+       ignored entirely. Each step of --i pushes the element's window 4%
+       further down the scroll, which is what produces the cascade. */
+    .rise {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry calc(5% + var(--i, 0) * 4%) cover
+        calc(26% + var(--i, 0) * 4%);
+    }
+
+    /* Headlines wipe up from their own baseline rather than fading. */
+    .unmask {
+      animation: unmask linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 22%;
+    }
+
+    /* Image drifts against the scroll inside its own frame. The extra height
+       is what the drift consumes, so the frame is never left short. */
+    .drift img {
+      animation: drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+      height: 116%;
+    }
+  }
+}
+
+/* ==========================================================================
+   MARQUEE
+   The one piece of continuous motion. Duplicated track, translated by exactly
+   -50%, so the seam is invisible and the loop needs no JS measurement.
+   ========================================================================== */
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee {
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 3.5rem;
+  padding-right: 3.5rem;
+  min-width: 100%;
+  animation: marquee 42s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+
+  .marquee {
+    overflow-x: auto;
+  }
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   UTILITY
+   ========================================================================== */
+
+.hairline-t {
+  border-top: 1px solid var(--rule);
+}
+
+.hairline-b {
+  border-bottom: 1px solid var(--rule);
+}
+
+.hairline-l {
+  border-left: 1px solid var(--rule);
+}
+
+.hairline-r {
+  border-right: 1px solid var(--rule);
+}
+
+.strike {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  color: var(--fg-mute);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100%;
+  z-index: 200;
+  background: var(--color-gold-lit);
+  color: var(--color-espresso);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  transition: top 250ms var(--ease-drape);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+body[data-locked='true'] {
+  overflow: hidden;
+}
