@@ -41,6 +41,7 @@ export function AnnouncementBar() {
        to the fold rather than a stack of stripes. */
     <div
       data-ground="dark"
+      data-topo="off"
       className="relative"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}

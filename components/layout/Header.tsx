@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { LogoHorizontal, Wordmark } from '@/components/brand/Logo';
+import { LogoHorizontal } from '@/components/brand/Logo';
 import {
   IconBag,
   IconClose,
@@ -67,13 +67,14 @@ export function Header() {
   return (
     <header
       data-ground="dark"
+      data-topo="off"
       className={cx(
         'sticky top-0 z-50 transition-colors duration-500',
         scrolled || menuOpen ? 'border-b border-rule' : 'bg-transparent',
       )}
     >
       <div className="shell">
-        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 md:h-20">
+        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4 md:h-20">
           {/* ---- Left: nav (desktop) / menu toggle (mobile) ---- */}
           <div className="flex items-center gap-7">
             {/* The breakpoint is lg, not md: six nav items plus the wordmark
@@ -110,8 +111,7 @@ export function Header() {
 
           {/* ---- Centre: logo ---- */}
           <Link href="/" className="justify-self-center" aria-label="Kshyovrata — home">
-            <LogoHorizontal className="hidden text-fg sm:inline-flex" />
-            <Wordmark className="text-[0.72rem] text-fg sm:hidden" />
+            <LogoHorizontal className="text-fg" />
           </Link>
 
           {/* ---- Right: search, account, bag ---- */}
@@ -130,13 +130,20 @@ export function Header() {
             {/* There are no accounts — checkout is guest-only and orders are
                 looked up by order number. A person glyph here promised a
                 sign-in that does not exist, so the slot carries the thing it
-                actually does, spelled out. */}
-            <Link
-              href="/track-order"
-              className="link-nav mr-2 hidden text-[0.625rem] tracking-[0.2em] uppercase lg:inline-block"
-            >
-              Track Order
-            </Link>
+                actually does, spelled out.
+
+                Below lg this lives in the drawer instead, keeping the row to
+                search and bag. The display utility sits on the wrapper: on the
+                link itself it would lose to `.link-nav`, which sets
+                `display: inline-block` unlayered and so outranks it. */}
+            <span className="mr-2 hidden lg:block">
+              <Link
+                href="/track-order"
+                className="link-nav text-[0.625rem] tracking-[0.2em] uppercase"
+              >
+                Track Order
+              </Link>
+            </span>
 
             {/* The count is a tabular numeral beside the glyph rather than a
                 filled badge — same device as the plate numbers and prices.

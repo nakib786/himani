@@ -121,7 +121,7 @@ export default function AboutPage() {
       </section>
 
       {/* ---- Identity ---- */}
-      <section className="border-y border-rule bg-bg-lift">
+      <section data-topo className="border-y border-rule bg-bg-lift">
         <div className="shell section-tight">
           <div className="grid items-center gap-12 md:grid-cols-12 md:gap-16">
             <div className="md:col-span-4">

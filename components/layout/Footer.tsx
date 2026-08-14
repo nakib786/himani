@@ -129,8 +129,8 @@ export function Footer() {
            own overflow, so it reads as a watermark the page is printed on
            rather than another line of navigation. Decorative: the accessible
            name is already carried by the lockup above. */}
-      <div className="shell pt-10 pb-2" aria-hidden="true">
-        <span className="text-watermark block w-full text-center text-[19vw] leading-[0.8] font-normal tracking-[0.06em] uppercase [font-family:var(--font-display)] select-none">
+      <div className="shell pt-10 pb-2 [container-type:inline-size]" aria-hidden="true">
+        <span className="text-watermark block w-full text-center text-[15.8cqw] leading-[0.8] font-normal tracking-[0.06em] -me-[0.06em] uppercase [font-family:var(--font-display)] select-none">
           Kshyovrata
         </span>
       </div>

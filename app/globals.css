@@ -297,6 +297,84 @@
 }
 
 /* ==========================================================================
+   TOPOGRAPHY
+   A seamless 600px contour tile, drawn as engraved map lines under every band
+   on every page. Where the grain is a surface tooth on the dark bands only,
+   this is the house figure and runs sitewide.
+
+   It is drawn ONCE PER GROUND, not once per section. `main` carries the whole
+   cream field in a single full-width layer, so the contours run edge to edge
+   and section to section without a seam — most cream sections are plain
+   `.shell` boxes with no ground of their own, and a per-section layer left the
+   gutters beside them bare and skipped those sections entirely.
+
+   That only works if a cream band inside the cream field stops repainting the
+   colour it is already sitting on; the rule below makes it transparent so the
+   field shows through. Dark bands still draw their own layer, since they paint
+   espresso over the field and have to put the contours back.
+
+   Site chrome opts out with `data-topo="off"`. The header spends most of its
+   life transparent over the hero and an overlay would film the artwork
+   beneath it; the announcement bar is too thin to show a 600px tile as
+   anything but noise. Anything else that paints its own panel — a `bg-bg-lift`
+   plate, say — takes a bare `data-topo` to get the contours back.
+   ========================================================================== */
+
+/* Same colour, painted twice: the inner band's copy is what was blocking the
+   page-level field. In @layer base so a Tailwind bg utility still wins on any
+   band that genuinely wants a different fill. */
+@layer base {
+  [data-ground='light'] [data-ground='light'] {
+    background-color: transparent;
+  }
+}
+
+/* The source tile is flat black. Rather than ship a recoloured copy per band,
+   it is used as a MASK and the colour comes from `currentColor` underneath, so
+   one file reads correctly on espresso and on gallery alike and follows the
+   band's --fg automatically. Black = opaque = alpha 1, which is exactly the
+   coverage the contour lines want, so the file needs no edit. */
+[data-topo]:not([data-topo='off']),
+main[data-ground],
+:is(section, header, footer, article, aside, div)[data-ground='dark']:not([data-topo='off']) {
+  position: relative;
+}
+
+[data-topo]:not([data-topo='off'])::after,
+main[data-ground]::after,
+:is(section, header, footer, article, aside, div)[data-ground='dark']:not([data-topo='off'])::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  background-color: currentColor;
+  -webkit-mask-image: url('/patterns/topography.svg');
+  mask-image: url('/patterns/topography.svg');
+  -webkit-mask-size: 600px 600px;
+  mask-size: 600px 600px;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+}
+
+/* Lighter over the pale ground: the same alpha that reads as a whisper on
+   espresso reads as dirt on gallery. Covers `main` itself and any panel that
+   opted back in from inside the cream field. */
+[data-ground='light']:not([data-topo='off'])::after,
+[data-ground='light'] [data-topo]:not([data-topo='off'])::after {
+  opacity: 0.045;
+}
+
+/* Contours sit under content, never over it — same rule the grain follows. */
+[data-topo]:not([data-topo='off']) > *,
+main[data-ground] > *,
+:is(section, header, footer, article, aside, div)[data-ground='dark']:not([data-topo='off']) > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
    LAYOUT PRIMITIVES
    ========================================================================== */
 
@@ -420,6 +498,17 @@
   text-transform: uppercase;
   letter-spacing: 0.3em;
   line-height: 1;
+}
+
+/* The 0.3em tracking is drawn for display sizes; at the header's phone size it
+   runs the name past its grid column. Declared here rather than as a
+   `tracking-*` utility on the element because `.wordmark` is unlayered and
+   would outrank one. Must stay after `.wordmark` — same specificity, so the
+   later rule is the one that wins. */
+@media (max-width: 639px) {
+  .wordmark-compact {
+    letter-spacing: 0.14em;
+  }
 }
 
 .eyebrow {

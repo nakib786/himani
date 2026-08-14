@@ -108,12 +108,20 @@ export function LogoLockup({
   );
 }
 
-/** Horizontal lockup — the header. */
+/**
+ * Horizontal lockup — the header. Emblem left, wordmark right.
+ *
+ * Sized down at phone widths: the header row is a symmetric three-column grid,
+ * so the lockup has to clear both the menu button and the search + bag cluster
+ * on a 375px viewport. `.wordmark-compact` pulls the tracking in over the same
+ * breakpoint — it has to be CSS rather than a `tracking-*` utility, since
+ * `.wordmark` is unlayered and outranks any Tailwind utility on the element.
+ */
 export function LogoHorizontal({ className }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-3 ${className ?? ''}`}>
-      <Monogram className="h-10 w-auto shrink-0" ornament={false} />
-      <Wordmark className="text-[0.8rem] sm:text-[0.95rem]" />
+    <span className={`inline-flex items-center gap-2 sm:gap-3 ${className ?? ''}`}>
+      <Monogram className="h-8 w-auto shrink-0 sm:h-10" ornament={false} />
+      <Wordmark className="wordmark-compact whitespace-nowrap text-[0.6rem] sm:text-[0.95rem]" />
     </span>
   );
 }

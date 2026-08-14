@@ -305,7 +305,7 @@ export default async function ProductPage({
 
       {/* ---- Complete the look ---- */}
       {companion ? (
-        <section className="border-y border-rule bg-bg-lift">
+        <section data-topo className="border-y border-rule bg-bg-lift">
           <div className="shell section-tight">
             <div className="flex items-baseline gap-4 border-t border-rule pt-4">
               <span className="index-num">04</span>
